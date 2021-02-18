@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta
+			name="viewport"
+			content="width=device-width,initial-scale=1,user-scalable=no"
+		/>
+		<title>Document</title>
+		<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	</head>
+	<style>
+		body,
+		html {
+			height: 100%;
+			width: 100%;
+			background: #fff;
+			position: relative;
+			overflow: hidden;
+		}
+		#wrap {
+			width: 70px;
+			height: 70px;
+			position: absolute;
+			left: 0;
+			top: 0;
+			bottom: 0;
+			right: 0;
+			margin: auto;
+		}
+		.box {
+			position: relative;
+			width: 70px;
+			height: 70px;
+			background: url(face.png) 50% no-repeat;
+			background-size: 100% 100%;
+		}
+		.eye {
+			width: 24px;
+			height: 24px;
+			position: absolute;
+			left: 24px;
+			top: 24px;
+			background: url(eye.png) 50% no-repeat;
+			background-size: 100% 100%;
+		}
+	</style>
+	<body>
+		<div id="wrap">
+			<div class="box">
+				<i class="eye"></i>
+			</div>
+		</div>
+		<script>
+			$(function () {
+				function Round(el, pel, skew) {
+					this.el = $(el);
+					this.pel = $(pel);
+					this.startX; //按下位置的坐标值
+					this.startY;
+					this.left;
+					this.top;
+					this.endX; //拖动结束后元素的X值
+					this.endY;
+					this.maxX; //最大范围，以X轴最大限制还求Y的最大范围
+					this.X; //最终元素位置
+					this.Y;
+					this.skew = skew || 1; //倍数，值越大，拖动的圈圈越小
+					this.maxX =
+						parseInt($(this.pel).css('width')) -
+						parseInt($(this.el).css('width')) -
+						parseInt($(this.el).css('width')) * this.skew;
+					this.drag();
+				}
+				Round.prototype.drag = function () {
+					var that = this;
+					$(this.el).on('touchstart', function (e) {
+						e.stopPropagation();
+						var touch = e.originalEvent.targetTouches[0];
+						that.startX = touch.pageX; //取得按下的坐标值
+						that.startY = touch.pageY;
+						that.left = parseInt($(this).css('left')); //保存元素当前的定位值
+						that.top = parseInt($(this).css('top'));
+					});
+					$(this.el).on('touchmove', function (e) {
+						e.stopPropagation();
+						e.preventDefault();
+						var touch = e.originalEvent.targetTouches[0];
+						that.endX = touch.pageX - that.startX; //计算偏移量
+						that.endY = touch.pageY - that.startY;
+						// 获取移动后的坐标距离原点（0,0）的平面角度（弧度值）
+						var atan = Math.atan2(that.endY, that.endX);
+						// 根据弧度、位移最大范围值maxX，通过勾股定理计算出对应的x、y的值
+						that.X =
+							Math.floor(that.maxX * Math.cos(atan)) + that.left; //算出坐标加上元素开始的定位值
+						that.Y =
+							Math.floor(that.maxX * Math.sin(atan)) + that.top;
+
+						$(this).css({
+							left: that.X,
+							top: that.Y,
+						});
+						$(this)
+							.parent()
+							.css({
+								left: that.X - that.left,
+								top: that.Y - that.top,
+							});
+					});
+					$(this.el).on('touchend', function (e) {
+						$(this).attr('style', '');
+						$(this).parent().attr('style', '');
+					});
+				};
+				var round = new Round('.eye', '.box');
+			});
+		</script>
+	</body>
+</html>
